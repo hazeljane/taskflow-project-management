@@ -5,13 +5,15 @@ import User from '../models/User.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+
 const cookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
+
 
 function setSession(res, user) {
   const token = jwt.sign({ sub: user._id.toString(), role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -49,8 +51,15 @@ router.post('/login', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
 router.post('/logout', (_req, res) => {
-  res.clearCookie('taskflow_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/' });
+  res.clearCookie('taskflow_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  });
+
   res.json({ message: 'Signed out.' });
 });
 
